@@ -1,6 +1,6 @@
 # fictional-fms
 
-###How to run
+### How to run
 * Clone the repo https://github.com/Posnakidesd/fictional-fms.git
 * Make sure that Docker daemon is up and running
 * Run `mvn clean install`. This will build the docker images as well.
