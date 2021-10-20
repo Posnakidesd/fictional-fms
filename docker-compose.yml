@@ -1,0 +1,81 @@
+version: '3.3'
+services:
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  kafka-setup:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-setup
+    container_name: kafka-setup
+    depends_on:
+      - broker
+    command: "bash -c 'echo Waiting for Kafka to be ready. Sleeping 20 seconds... && \
+                       sleep 20 && \
+                       kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic trip && \
+                       kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic heartbeat && \
+                       kafka-topics --create --if-not-exists --zookeeper zookeeper:2181 --partitions 1 --replication-factor 1 --topic penalty'"
+    environment:
+      KAFKA_BROKER_ID: ignored
+      KAFKA_ZOOKEEPER_CONNECT: ignored
+
+
+  postgres:
+    image: 'postgres:latest'
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fms
+
+  service-a:
+    image: 'service-a:latest'
+    ports:
+      - 8084:8080
+    environment:
+      POSTGRESQL_URL: r2dbc:postgresql://postgres:5432/fms
+      BOOTSTRAP_SERVERS_CONFIG: broker:29092
+    depends_on:
+      - broker
+    restart: always
+
+  service-b:
+    image: 'service-b:latest'
+    environment:
+      BOOTSTRAP_SERVERS_CONFIG: broker:29092
+    depends_on:
+      - broker
+    restart: always
+
+  service-c:
+    image: 'service-c:latest'
+    environment:
+      POSTGRESQL_URL: r2dbc:postgresql://postgres:5432/fms
+      BOOTSTRAP_SERVERS_CONFIG: broker:29092
+    depends_on:
+      - broker
+    restart: always
+
+

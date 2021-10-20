@@ -1,0 +1,45 @@
+{
+  "namespace": "com.trg.fms.api",
+  "type": "record",
+  "name": "Trip",
+  "fields": [
+    {
+      "name": "id",
+      "type": [
+        "null",
+        "long"
+      ],
+      "javaAnnotation": "org.springframework.data.annotation.Id"
+    },
+    {
+      "name": "driverId",
+      "type": [
+        "null",
+        "long"
+      ],
+      "order": "ignore"
+    },
+    {
+      "name": "carId",
+      "type": [
+        "null",
+        "long"
+      ],
+      "order": "ignore"
+    },
+    {
+      "name": "state",
+      "type": {
+        "type": "enum",
+        "name": "TripState",
+        "symbols": [
+          "START",
+          "ACTIVE",
+          "STOP"
+        ]
+      },
+      "order": "ignore"
+    }
+  ],
+  "javaAnnotation": "com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.trg.fms.serdes.JsonTripDeserializer.class)\n@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.trg.fms.serdes.JsonTripSerializer.class)"
+}
